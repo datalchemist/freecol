@@ -81,8 +81,8 @@ public final class CanvasMouseListener extends FreeColClientHolder implements Mo
         case MouseEvent.BUTTON2: // Immediate goto
             gui.performGoto(e.getX(), e.getY());
             break;
-        case MouseEvent.BUTTON3: // Immediate goto (right-click moves to tile)
-            gui.performGoto(e.getX(), e.getY());
+        case MouseEvent.BUTTON3: // First click: show path preview; second click: execute move
+            gui.previewOrExecuteGoto(e.getX(), e.getY());
             break;
         default:
             break;

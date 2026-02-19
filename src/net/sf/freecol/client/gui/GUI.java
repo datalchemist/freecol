@@ -1368,7 +1368,18 @@ public class GUI extends FreeColClientHolder {
      * @param y The x coordinate of the goto destination (pixels).
      */
     public void performGoto(int x, int y) {}
-    
+
+    /**
+     * Preview the goto path to the given position on first right-click,
+     * or execute the move if the same tile is right-clicked again.
+     *
+     * Used by: CanvasMouseListener
+     *
+     * @param x The x coordinate of the target position (pixels).
+     * @param y The y coordinate of the target position (pixels).
+     */
+    public void previewOrExecuteGoto(int x, int y) {}
+
     /**
      * Send the active unit along the current goto path as far as possible.
      *

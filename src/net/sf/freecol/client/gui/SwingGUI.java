@@ -1277,6 +1277,36 @@ public class SwingGUI extends GUI {
      * {@inheritDoc}
      */
     @Override
+    public void previewOrExecuteGoto(int x, int y) {
+        final Unit active = getActiveUnit();
+        if (active == null) return;
+
+        final Tile tile = tileAt(x, y);
+        if (tile == null || active.getTile() == tile) return;
+
+        if (!isGotoStarted()) {
+            // First right-click: enter goto mode and display path preview
+            startGoto();
+            updateGotoTile(tile);
+        } else {
+            // Subsequent right-click: check whether we are targeting the same tile
+            final PathNode gotoPath = this.mapViewer.getMapViewerState().getGotoPath();
+            final Tile gotoTarget = (gotoPath == null) ? null
+                : gotoPath.getLastNode().getTile();
+            if (tile == gotoTarget) {
+                // Same tile: execute the move order
+                traverseGotoPath();
+            } else {
+                // Different tile: update the path preview to the new tile
+                updateGotoTile(tile);
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void traverseGotoPath() {
         final Unit unit = getActiveUnit();
         if (unit == null || !isGotoStarted()) {
