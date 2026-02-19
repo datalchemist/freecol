@@ -66,8 +66,10 @@ public final class CanvasMouseMotionListener extends FreeColClientHolder impleme
         if ((me.getModifiersEx() & MouseEvent.BUTTON1_DOWN_MASK) != MouseEvent.BUTTON1_DOWN_MASK) {
             return;
         }
-        
-        scrolling.performDragScrollIfActive(me);
+
+        if (!getGUI().dragMapView(me.getX(), me.getY())) {
+            scrolling.performDragScrollIfActive(me);
+        }
 
         getGUI().updateGoto(me.getX(), me.getY(), true);
     }

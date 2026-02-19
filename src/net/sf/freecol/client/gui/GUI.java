@@ -1398,7 +1398,25 @@ public class GUI extends FreeColClientHolder {
      */
     public void prepareDrag(int x, int y) {}
 
-    
+    /**
+     * Update map view drag panning, translating the given current drag
+     * position into a map pan offset.
+     *
+     * Used by: CanvasMouseMotionListener
+     *
+     * @param x Current drag x coordinate (pixels).
+     * @param y Current drag y coordinate (pixels).
+     * @return True if map drag panning is active and was applied.
+     */
+    public boolean dragMapView(int x, int y) { return false; }
+
+    /**
+     * Stop any active map view drag panning.
+     *
+     * Used by: CanvasMouseListener
+     */
+    public void stopMapDrag() {}
+
     // MapControls handling
 
     /**

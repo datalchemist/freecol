@@ -39,6 +39,7 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -992,6 +993,11 @@ public final class Canvas extends JDesktopPane {
         for (MouseMotionListener mouseMotionListener : mouseMotionListeners) {
             removeMouseMotionListener(mouseMotionListener);
         }
+
+        MouseWheelListener[] mouseWheelListeners = getMouseWheelListeners();
+        for (MouseWheelListener mouseWheelListener : mouseWheelListeners) {
+            removeMouseWheelListener(mouseWheelListener);
+        }
     }
 
     /**
@@ -1007,6 +1013,7 @@ public final class Canvas extends JDesktopPane {
             = new CanvasMapEditorMouseListener(this.freeColClient, scrolling);
         addMouseListener(listener);
         addMouseMotionListener(listener);
+        addMouseWheelListener(new CanvasMouseWheelListener(this.freeColClient));
     }
 
     /**
@@ -1019,6 +1026,7 @@ public final class Canvas extends JDesktopPane {
                 new MenuMouseMotionListener(scrolling)));
         addMouseListener(new CanvasMouseListener(this.freeColClient));
         addMouseMotionListener(new CanvasMouseMotionListener(this.freeColClient, scrolling));
+        addMouseWheelListener(new CanvasMouseWheelListener(this.freeColClient));
     }
 
     /**

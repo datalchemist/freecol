@@ -99,6 +99,8 @@ public final class CanvasMouseListener extends FreeColClientHolder implements Mo
         // Only process release of Button1 for drag-and-release gotos
         if (e.getButton() != MouseEvent.BUTTON1) return;
 
+        getGUI().stopMapDrag();
+
         // Handle goto on release, following updates in
         // @see CanvasMouseMotionListener#mouseDragged.
         //

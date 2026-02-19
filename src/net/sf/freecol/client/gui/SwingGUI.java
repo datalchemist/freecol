@@ -201,6 +201,12 @@ public class SwingGUI extends GUI {
     /** Where the map was drag-clicked. */
     private Point dragPoint;
 
+    /** Starting mouse position for map view drag panning. */
+    private Point mapDragStartPoint;
+
+    /** Map focus point at the start of a map view drag panning operation. */
+    private Point mapDragFocusStart;
+
     /** Has a goto operation started? */
     private boolean gotoStarted = false;
 
@@ -229,6 +235,8 @@ public class SwingGUI extends GUI {
         this.canvas = null;
         this.widgets = null;
         this.dragPoint = null;
+        this.mapDragStartPoint = null;
+        this.mapDragFocusStart = null;
         
         configureMigLayout(scaleFactor);
         
@@ -1315,6 +1323,8 @@ public class SwingGUI extends GUI {
         final Unit dragUnit = this.mapViewer.getMapViewerState().findUnitInFront(tile);
         if (dragUnit == null || !getMyPlayer().owns(dragUnit)) {
             clearDrag();
+            this.mapDragStartPoint = new Point(x, y);
+            this.mapDragFocusStart = getFocusMapPoint();
             return;
         }
         
@@ -1323,6 +1333,29 @@ public class SwingGUI extends GUI {
         
         setDragPoint(x, y);
         this.canvas.requestFocus();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean dragMapView(int x, int y) {
+        if (this.mapDragStartPoint == null || this.mapDragFocusStart == null) {
+            return false;
+        }
+        final int dx = this.mapDragStartPoint.x - x;
+        final int dy = this.mapDragStartPoint.y - y;
+        setFocusMapPoint(new Point(this.mapDragFocusStart.x + dx, this.mapDragFocusStart.y + dy));
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void stopMapDrag() {
+        this.mapDragStartPoint = null;
+        this.mapDragFocusStart = null;
     }
     
 
