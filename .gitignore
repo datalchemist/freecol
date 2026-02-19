@@ -18,6 +18,8 @@ FreeCol*.jar
 src/*.MF
 build/installer/
 build/net/
+build/*.txt
+build/*.txt.tmp
 doc/specification_*.html
 doc/*.aux
 doc/*.idx
