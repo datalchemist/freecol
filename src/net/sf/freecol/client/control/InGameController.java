@@ -1687,10 +1687,13 @@ public final class InGameController extends FreeColClientHolder {
             return false; // Can not disembark onto other nation units.
         }
 
-        // Disembark selected units able to move.
+        // Disembark units able to move to the target tile.
+        // Use getSimpleMoveType (ignores movesLeft) because embarked units
+        // always have movesLeft=0, which would otherwise exclude them all.
+        final Tile carrierTile = unit.getTile();
         final List<Unit> disembarkable
             = transform(unit.getUnits(),
-                        u -> u.getMoveType(tile).isProgress());
+                        u -> u.getSimpleMoveType(carrierTile, tile).isProgress());
         if (disembarkable.isEmpty()) return false; // Fail, did not find one
         for (Unit u : disembarkable) changeState(u, UnitState.ACTIVE);
         // Automatically disembark all eligible units without showing a dialog.

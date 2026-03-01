@@ -1707,13 +1707,35 @@ public class SwingGUI extends GUI {
                     if (getViewMode() != ViewMode.MOVE_UNITS) {
                         other = active;
                     } else {
+                        // Build an ordered list: tile units, then passengers
+                        // of any carrier on this tile (so the player can
+                        // cycle into the carrier to select embarked units).
                         List<Unit> units = tile.getUnitList();
-                        while (!units.isEmpty()) {
-                            Unit u = units.remove(0);
-                            if (u == active) {
-                                if (!units.isEmpty()) other = units.remove(0);
+                        for (Unit tileUnit : new ArrayList<>(units)) {
+                            if (tileUnit.isCarrier()) {
+                                units.addAll(tileUnit.getUnitList());
+                            }
+                        }
+                        // Also handle the case where the active unit is
+                        // already a passenger inside a carrier on this tile.
+                        if (active.isOnCarrier()
+                                && active.getCarrier().getTile() == tile
+                                && !units.contains(active)) {
+                            units.add(active);
+                            for (Unit sibling : active.getCarrier().getUnitList()) {
+                                if (sibling != active) units.add(sibling);
+                            }
+                        }
+                        boolean found = false;
+                        for (int i = 0; i < units.size(); i++) {
+                            if (units.get(i) == active) {
+                                other = units.get((i + 1) % units.size());
+                                found = true;
                                 break;
                             }
+                        }
+                        if (!found) {
+                            // active wasn't in the list — keep the default
                         }
                     }
                 }
