@@ -1693,34 +1693,9 @@ public final class InGameController extends FreeColClientHolder {
                         u -> u.getMoveType(tile).isProgress());
         if (disembarkable.isEmpty()) return false; // Fail, did not find one
         for (Unit u : disembarkable) changeState(u, UnitState.ACTIVE);
-        if (disembarkable.size() == 1) {
-            if (getGUI().modalConfirmDialog(tile, StringTemplate.key("disembark.text"),
-                                 disembarkable.get(0), "ok", "cancel", true)) {
-                moveDirection(disembarkable.get(0), direction, false);
-            }
-        } else {
-            List<ChoiceItem<Unit>> choices
-                = transform(disembarkable, alwaysTrue(), u ->
-                    new ChoiceItem<Unit>(u.getDescription(Unit.UnitLabelType.NATIONAL), u));
-            choices.add(new ChoiceItem<>(Messages.message("all"), unit));
-
-            // Use moveDirection() to disembark units as while the
-            // destination tile is known to be clear of other player
-            // units or settlements, it may have a rumour or need
-            // other special handling.
-            Unit u = getGUI().modalChoiceDialog(unit.getTile(),
-                                        StringTemplate.key("disembark.text"),
-                                        unit, "none", choices);
-            if (u == null) {
-                // Cancelled, done.
-            } else if (u == unit) {
-                // Disembark all.
-                for (Unit dUnit : disembarkable) {
-                    moveDirection(dUnit, direction, false);
-                }
-            } else {
-                moveDirection(u, direction, false);
-            }
+        // Automatically disembark all eligible units without showing a dialog.
+        for (Unit u : disembarkable) {
+            moveDirection(u, direction, false);
         }
         return true;
     }
