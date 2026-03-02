@@ -49,7 +49,9 @@ def download_model(url, dest_path):
     if os.path.exists(dest_path):
         print(f"  Model already exists: {dest_path}")
         return
-    os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+    dest_dir = os.path.dirname(dest_path)
+    if dest_dir:
+        os.makedirs(dest_dir, exist_ok=True)
     print(f"  Downloading EDSR model from {url} ...")
     urllib.request.urlretrieve(url, dest_path)
     print(f"  Saved model to {dest_path}")
@@ -133,7 +135,7 @@ def find_all_units():
             continue
         for fname in sorted(os.listdir(subdir_path)):
             if fname.endswith(".png") and ".size2" not in fname:
-                stem = fname[:-4]  # remove .png
+                stem = os.path.splitext(fname)[0]
                 units.append((subdir, stem))
     return units
 
