@@ -60,14 +60,13 @@ public final class CanvasMouseListener extends FreeColClientHolder implements Mo
     public void mousePressed(MouseEvent e) {
         if (!e.getComponent().isEnabled()) return;
         final GUI gui = getGUI();
-        
-        if (e.isPopupTrigger()) {
-            gui.showTilePopup(gui.tileAt(e.getX(), e.getY()));
-            return;
-        }
 
         switch (e.getButton()) {
-        case MouseEvent.BUTTON1: 
+        case MouseEvent.BUTTON1:
+            if (e.isPopupTrigger()) {
+                gui.showTilePopup(gui.tileAt(e.getX(), e.getY()));
+                return;
+            }
             // If we have GoTo mode enabled then GoTo takes precedence
             if (gui.isGotoStarted()) {
                 gui.performGoto(e.getX(), e.getY());
@@ -82,8 +81,8 @@ public final class CanvasMouseListener extends FreeColClientHolder implements Mo
         case MouseEvent.BUTTON2: // Immediate goto
             gui.performGoto(e.getX(), e.getY());
             break;
-        case MouseEvent.BUTTON3: // Immediate tile popup
-            gui.showTilePopup(gui.tileAt(e.getX(), e.getY()));
+        case MouseEvent.BUTTON3: // First click: show path preview; second click: execute move
+            gui.previewOrExecuteGoto(e.getX(), e.getY());
             break;
         default:
             break;
@@ -98,6 +97,8 @@ public final class CanvasMouseListener extends FreeColClientHolder implements Mo
 
         // Only process release of Button1 for drag-and-release gotos
         if (e.getButton() != MouseEvent.BUTTON1) return;
+
+        getGUI().stopMapDrag();
 
         // Handle goto on release, following updates in
         // @see CanvasMouseMotionListener#mouseDragged.

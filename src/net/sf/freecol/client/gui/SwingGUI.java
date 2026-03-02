@@ -201,6 +201,12 @@ public class SwingGUI extends GUI {
     /** Where the map was drag-clicked. */
     private Point dragPoint;
 
+    /** Starting mouse position for map view drag panning. */
+    private Point mapDragStartPoint;
+
+    /** Map focus point at the start of a map view drag panning operation. */
+    private Point mapDragFocusStart;
+
     /** Has a goto operation started? */
     private boolean gotoStarted = false;
 
@@ -229,6 +235,8 @@ public class SwingGUI extends GUI {
         this.canvas = null;
         this.widgets = null;
         this.dragPoint = null;
+        this.mapDragStartPoint = null;
+        this.mapDragFocusStart = null;
         
         configureMigLayout(scaleFactor);
         
@@ -1269,6 +1277,36 @@ public class SwingGUI extends GUI {
      * {@inheritDoc}
      */
     @Override
+    public void previewOrExecuteGoto(int x, int y) {
+        final Unit active = getActiveUnit();
+        if (active == null) return;
+
+        final Tile tile = tileAt(x, y);
+        if (tile == null || active.getTile() == tile) return;
+
+        if (!isGotoStarted()) {
+            // First right-click: enter goto mode and display path preview
+            startGoto();
+            updateGotoTile(tile);
+        } else {
+            // Subsequent right-click: check whether we are targeting the same tile
+            final PathNode gotoPath = this.mapViewer.getMapViewerState().getGotoPath();
+            final Tile gotoTarget = (gotoPath == null) ? null
+                : gotoPath.getLastNode().getTile();
+            if (tile == gotoTarget) {
+                // Same tile: execute the move order
+                traverseGotoPath();
+            } else {
+                // Different tile: update the path preview to the new tile
+                updateGotoTile(tile);
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void traverseGotoPath() {
         final Unit unit = getActiveUnit();
         if (unit == null || !isGotoStarted()) {
@@ -1315,6 +1353,8 @@ public class SwingGUI extends GUI {
         final Unit dragUnit = this.mapViewer.getMapViewerState().findUnitInFront(tile);
         if (dragUnit == null || !getMyPlayer().owns(dragUnit)) {
             clearDrag();
+            this.mapDragStartPoint = new Point(x, y);
+            this.mapDragFocusStart = getFocusMapPoint();
             return;
         }
         
@@ -1323,6 +1363,29 @@ public class SwingGUI extends GUI {
         
         setDragPoint(x, y);
         this.canvas.requestFocus();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean dragMapView(int x, int y) {
+        if (this.mapDragStartPoint == null || this.mapDragFocusStart == null) {
+            return false;
+        }
+        final int dx = this.mapDragStartPoint.x - x;
+        final int dy = this.mapDragStartPoint.y - y;
+        setFocusMapPoint(new Point(this.mapDragFocusStart.x + dx, this.mapDragFocusStart.y + dy));
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void stopMapDrag() {
+        this.mapDragStartPoint = null;
+        this.mapDragFocusStart = null;
     }
     
 
@@ -1644,13 +1707,35 @@ public class SwingGUI extends GUI {
                     if (getViewMode() != ViewMode.MOVE_UNITS) {
                         other = active;
                     } else {
+                        // Build an ordered list: tile units, then passengers
+                        // of any carrier on this tile (so the player can
+                        // cycle into the carrier to select embarked units).
                         List<Unit> units = tile.getUnitList();
-                        while (!units.isEmpty()) {
-                            Unit u = units.remove(0);
-                            if (u == active) {
-                                if (!units.isEmpty()) other = units.remove(0);
+                        for (Unit tileUnit : new ArrayList<>(units)) {
+                            if (tileUnit.isCarrier()) {
+                                units.addAll(tileUnit.getUnitList());
+                            }
+                        }
+                        // Also handle the case where the active unit is
+                        // already a passenger inside a carrier on this tile.
+                        if (active.isOnCarrier()
+                                && active.getCarrier().getTile() == tile
+                                && !units.contains(active)) {
+                            units.add(active);
+                            for (Unit sibling : active.getCarrier().getUnitList()) {
+                                if (sibling != active) units.add(sibling);
+                            }
+                        }
+                        boolean found = false;
+                        for (int i = 0; i < units.size(); i++) {
+                            if (units.get(i) == active) {
+                                other = units.get((i + 1) % units.size());
+                                found = true;
                                 break;
                             }
+                        }
+                        if (!found) {
+                            // active wasn't in the list — keep the default
                         }
                     }
                 }

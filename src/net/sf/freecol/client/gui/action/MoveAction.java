@@ -25,6 +25,7 @@ import net.sf.freecol.client.FreeColClient;
 import net.sf.freecol.client.gui.GUI;
 import net.sf.freecol.common.model.Direction;
 import net.sf.freecol.common.model.Tile;
+import net.sf.freecol.common.model.Unit;
 
 
 /**
@@ -63,6 +64,8 @@ public class MoveAction extends MapboardAction {
         super(freeColClient, id + direction + ".secondary");
 
         this.direction = direction;
+
+        setCanvasKeyBinding(true);
     }
 
 
@@ -76,7 +79,12 @@ public class MoveAction extends MapboardAction {
         final GUI gui = getGUI();
         switch (gui.getViewMode()) {
         case MOVE_UNITS:
-            igc().moveUnit(gui.getActiveUnit(), direction);
+            final Unit activeUnit = gui.getActiveUnit();
+            if (activeUnit != null) {
+                igc().moveUnit(activeUnit, direction);
+            } else {
+                gui.scrollMap(direction, true);
+            }
             break;
         case TERRAIN:
             final Tile tile = gui.getSelectedTile();

@@ -1368,7 +1368,18 @@ public class GUI extends FreeColClientHolder {
      * @param y The x coordinate of the goto destination (pixels).
      */
     public void performGoto(int x, int y) {}
-    
+
+    /**
+     * Preview the goto path to the given position on first right-click,
+     * or execute the move if the same tile is right-clicked again.
+     *
+     * Used by: CanvasMouseListener
+     *
+     * @param x The x coordinate of the target position (pixels).
+     * @param y The y coordinate of the target position (pixels).
+     */
+    public void previewOrExecuteGoto(int x, int y) {}
+
     /**
      * Send the active unit along the current goto path as far as possible.
      *
@@ -1398,7 +1409,25 @@ public class GUI extends FreeColClientHolder {
      */
     public void prepareDrag(int x, int y) {}
 
-    
+    /**
+     * Update map view drag panning, translating the given current drag
+     * position into a map pan offset.
+     *
+     * Used by: CanvasMouseMotionListener
+     *
+     * @param x Current drag x coordinate (pixels).
+     * @param y Current drag y coordinate (pixels).
+     * @return True if map drag panning is active and was applied.
+     */
+    public boolean dragMapView(int x, int y) { return false; }
+
+    /**
+     * Stop any active map view drag panning.
+     *
+     * Used by: CanvasMouseListener
+     */
+    public void stopMapDrag() {}
+
     // MapControls handling
 
     /**
