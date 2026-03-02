@@ -206,3 +206,6 @@ idxmake.log
 www.freecol.org/.jekyll-cache
 www.freecol.org/.jekyll-metadata
 www.freecol.org/_site
+
+### AI model files (too large for repository)
+scripts/models/
