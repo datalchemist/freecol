@@ -27,13 +27,15 @@ import java.awt.Point;
 
 import javax.swing.JLabel;
 
-import net.sf.freecol.client.gui.ImageLibrary;
 import net.sf.freecol.common.model.Tile;
 import net.sf.freecol.common.model.Unit;
 
 
 /**
  * Class for the animation of units movement.
+ *
+ * Uses time-based interpolation to ensure the animation takes a
+ * consistent duration regardless of tile size or zoom level.
  */
 final class UnitMoveAnimation extends Animation {
 
@@ -45,9 +47,6 @@ final class UnitMoveAnimation extends Animation {
 
     /** The animation speed client option. */
     private final int speed;
-
-    /** The image scale. */
-    private final float scale;
 
 
     /**
@@ -65,9 +64,24 @@ final class UnitMoveAnimation extends Animation {
         super(unit, makeUnmodifiableList(sourceTile, destinationTile));
 
         this.speed = speed;
-        this.scale = scale;
     }
-    
+
+
+    /**
+     * Get the total animation duration for a given speed setting.
+     *
+     * @param speed The animation speed (1=slow, 2=normal, 3=fast).
+     * @return The duration in milliseconds.
+     */
+    static long getDuration(int speed) {
+        switch (speed) {
+        case 1:  return 2000L;
+        case 2:  return 1500L;
+        case 3:  return 1000L;
+        default: return 1500L;
+        }
+    }
+
 
     // Implement Animation
 
@@ -77,45 +91,28 @@ final class UnitMoveAnimation extends Animation {
     @Override
     public void executeWithLabel(JLabel unitLabel,
                                  Animations.Procedure paintCallback) {
-        final int movementRatio = (int)(Math.pow(2, this.speed + 1)
-            * this.scale);
-        final double xratio = ImageLibrary.TILE_SIZE.width
-            / (double)ImageLibrary.TILE_SIZE.height;
         final Point srcPoint = this.points.get(0);
         final Point dstPoint = this.points.get(1);
-        final int stepX = (int)(Math.signum(dstPoint.getX() - srcPoint.getX())
-            * xratio * movementRatio);
-        final int stepY = (int)(Math.signum(dstPoint.getY() - srcPoint.getY())
-            * movementRatio);
+        final long duration = getDuration(this.speed);
+        final int dx = dstPoint.x - srcPoint.x;
+        final int dy = dstPoint.y - srcPoint.y;
 
-        Point point = srcPoint;
-        long time = now(), dropFrames = 0;
-        while (!point.equals(dstPoint)) {
-            point.x += stepX;
-            point.y += stepY;
-            if ((stepX < 0 && point.x < dstPoint.x)
-                || (stepX > 0 && point.x > dstPoint.x)) {
-                point.x = dstPoint.x;
-            }
-            if ((stepY < 0 && point.y < dstPoint.y)
-                || (stepY > 0 && point.y > dstPoint.y)) {
-                point.y = dstPoint.y;
-            }
-            if (dropFrames <= 0) {
-                unitLabel.setLocation(point);
-                paintCallback.execute(); // repaint now
-                long newTime = now();
-                long timeTaken = newTime - time;
-                time = newTime;
-                final long waitTime = ANIMATION_DELAY - timeTaken;
-                if (waitTime > 0) {
-                    delay(waitTime, "Animation interrupted.");
-                    dropFrames = 0;
-                } else {
-                    dropFrames = timeTaken / ANIMATION_DELAY - 1;
-                }
-            } else {
-                dropFrames--;
+        final long startTime = now();
+        for (;;) {
+            long currentTime = now();
+            double t = Math.min(1.0,
+                (double)(currentTime - startTime) / duration);
+
+            unitLabel.setLocation(srcPoint.x + (int)(t * dx),
+                                  srcPoint.y + (int)(t * dy));
+            paintCallback.execute();
+
+            if (t >= 1.0) break;
+
+            long frameEnd = now();
+            long waitTime = ANIMATION_DELAY - (frameEnd - currentTime);
+            if (waitTime > 0) {
+                delay(waitTime, "Animation interrupted.");
             }
         }
     }
